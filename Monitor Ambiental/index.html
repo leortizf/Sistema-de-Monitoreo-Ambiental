@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Monitoreo Ambiental</title>
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+    #charts { display: flex; justify-content: center; gap: 50px; }
+    .chart { width: 200px; height: 180px; }
+  </style>
+</head>
+<body>
+  <h1>Monitoreo Ambiental</h1>
+  <div id="charts">
+    <div id="temp_indicator" class="chart"></div>
+    <div id="hum_indicator" class="chart"></div>
+  </div>
+
+  <button id="btnReporte">Descargar Reporte</button>
+
+  <div id="charts">
+    <div id="temp_indicator" class="chart"></div>
+    <div id="hum_indicator" class="chart"></div>
+  </div>
+  
+  <script>
+  google.charts.load('current', {'packages':['gauge']});
+  google.charts.setOnLoadCallback(initCharts);
+
+  function initCharts() {
+    window.tempChart = new google.visualization.Gauge(document.getElementById('temp_indicator'));
+    window.humChart = new google.visualization.Gauge(document.getElementById('hum_indicator'));
+
+    const tempData = google.visualization.arrayToDataTable([
+      ['Label', 'Value'],
+      ['Temp °C', 0]
+    ]);
+    const humData = google.visualization.arrayToDataTable([
+      ['Label', 'Value'],
+      ['Hum %', 0]
+    ]);
+
+    const optionsTemp = {
+      width: 200, height: 180,
+      redFrom: 35, redTo: 50,
+      yellowFrom: 25, yellowTo: 35,
+      minorTicks: 5,
+      max: 50,
+      min: 0
+    };
+    const optionsHum = {
+      width: 200, height: 180,
+      redFrom: 80, redTo: 100,
+      yellowFrom: 60, yellowTo: 80,
+      minorTicks: 5,
+      max: 100,
+      min: 0
+    };
+
+    window.tempData = tempData;
+    window.humData = humData;
+    window.tempOptions = optionsTemp;
+    window.humOptions = optionsHum;
+
+    window.tempChart.draw(tempData, optionsTemp);
+    window.humChart.draw(humData, optionsHum);
+
+    actualizarDatos();
+    setInterval(actualizarDatos, 2000);
+  }
+
+  async function actualizarDatos() {
+  try {
+    const res = await fetch('/datos');  // ruta relativa
+    const data = await res.json();
+
+    if (data.temperatura !== null && data.humedad !== null) {
+      window.tempData.setValue(0, 1, data.temperatura);
+      window.tempChart.draw(window.tempData, window.tempOptions);
+
+      window.humData.setValue(0, 1, data.humedad);
+      window.humChart.draw(window.humData, window.humOptions);
+    }
+  } catch (error) {
+    console.error('Error al obtener datos:', error);
+  }
+}
+    document.getElementById('btnReporte').addEventListener('click', () => {
+    window.open('/reporte', '_blank');
+    });
+</script>
+</body>
+</html>
